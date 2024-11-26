@@ -20,23 +20,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Menonaktifkan CSRF (opsional)
+                .csrf(csrf -> csrf.disable())  // Menonaktifkan CSRF (optional)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/login", "/register").permitAll() // Izinkan endpoint ini tanpa autentikasi
-                        .anyRequest().authenticated() // Endpoint lainnya memerlukan autentikasi
+                        .requestMatchers("/auth/register", "/auth/login").permitAll()  // Izinkan endpoint login dan register
+                        .anyRequest().authenticated()  // Endpoint lainnya memerlukan autentikasi
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // Custom login page
-                        .defaultSuccessUrl("/home", true) // Redirect setelah login berhasil
+                        .loginPage("/auth/login")  // Halaman login custom
+                        .defaultSuccessUrl("/home", true)  // Redirect setelah login berhasil ke /home
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login") // Redirect setelah logout
+                        .logoutSuccessUrl("/auth/login")  // Redirect setelah logout ke login
                         .permitAll()
                 );
 
         return http.build();
     }
-
 }
+

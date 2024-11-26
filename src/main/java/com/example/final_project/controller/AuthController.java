@@ -8,6 +8,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @Controller
 @RequestMapping("/auth")
 public class AuthController {
@@ -16,7 +18,7 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder; // Menginjeksi PasswordEncoder dari Spring Security
 
     // Endpoint untuk registrasi user
     @PostMapping("/register")
@@ -26,8 +28,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username sudah terdaftar");
         }
         // Menyimpan user baru ke database
-        userService.registerUser(user);
-        return ResponseEntity.ok("Registrasi berhasil!");
+        return ResponseEntity.ok(userService.registerUser(user));
     }
 
     // Endpoint untuk menampilkan halaman login
@@ -36,19 +37,27 @@ public class AuthController {
         return "login";  // Merender file login.html dari folder templates
     }
 
-    // Endpoint untuk login user
+    // Endpoint untuk login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
-        User user = userService.findUserByUsername(username);
-        if (user == null) {
+        Optional<User> user = Optional.ofNullable(userService.findUserByUsername(username));
+        if (user.isEmpty()) {
             return ResponseEntity.status(401).body("Username tidak ditemukan");
         }
 
         // Membandingkan password yang diinput dengan password yang ter-hash di database
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.get().getPassword())) {
             return ResponseEntity.status(401).body("Password salah");
         }
 
-        return ResponseEntity.ok("Login berhasil!");
+        // Jika login berhasil, tidak perlu menggunakan ResponseEntity.
+        // Pengalihan akan ditangani oleh Spring Security otomatis.
+        return ResponseEntity.ok("Login berhasil!");  // Ini akan tetap mengirimkan pesan, tapi sebenarnya tidak perlu.
+    }
+
+    // Endpoint untuk menampilkan halaman dashboard setelah login
+    @GetMapping("/home")
+    public String dashboard() {
+        return "dashboard";  // Merender file dashboard.html dari folder templates
     }
 }
